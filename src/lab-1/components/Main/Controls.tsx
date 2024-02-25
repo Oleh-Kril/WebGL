@@ -3,6 +3,7 @@ import {DEFAULT_POLYGON, usePolygons} from "../../store/polygonsAtom.ts"
 import {useThree} from "@react-three/fiber"
 import { Html } from "@react-three/drei"
 import styles from "./Controls.module.scss"
+import menuStyles from "./Menu.module.scss"
 import {useEffect, useRef, useState} from "react"
 
 export default function Controls(){
@@ -40,12 +41,15 @@ export default function Controls(){
         // Calculate the final position of the new vertex
         const finalPosition = camera.position.clone().add(direction.multiplyScalar(distance))
 
+
         // Add the new vertex to the vertices array
         if(currentGroup){
+            const adjustedPosition = finalPosition.clone().sub(currentGroup.position)
+
             setPolygons(prevPolygons => {
                 const newPolygons = prevPolygons.map(group => {
                     if(group.id === currentGroupId.current){
-                        group.vertices = [...group.vertices, finalPosition]
+                        group.vertices = [...group.vertices, adjustedPosition]
                     }
                     return group
                 })
@@ -120,10 +124,14 @@ export default function Controls(){
             return prevPolygons.map(group => {
                 if (group.id === currentGroupId.current) {
                     const newPosition = group.position.clone();
-                    if (event.code === "ArrowRight") newPosition.x += 0.1;
-                    if (event.code === "ArrowLeft") newPosition.x -= 0.1;
-                    if (event.code === "ArrowUp") newPosition.y += 0.1;
-                    if (event.code === "ArrowDown") newPosition.y -= 0.1;
+                    let delta = 0.1;
+                    if(event.shiftKey){
+                        delta = 0.3
+                    }
+                    if (event.code === "ArrowRight") newPosition.x += delta;
+                    if (event.code === "ArrowLeft") newPosition.x -= delta;
+                    if (event.code === "ArrowUp") newPosition.y += delta;
+                    if (event.code === "ArrowDown") newPosition.y -= delta;
                     return {...group, position: newPosition};
                 } else {
                     return group;
@@ -175,9 +183,11 @@ export default function Controls(){
                 className={styles.controls}
                 onClick={handleMouseClick}
                 tabIndex={0}
-            >
+            />
+            <div className={menuStyles.menu}>
                 <button onClick={deleteLastVertex}>Delete Last Vertex</button>
                 <button onClick={deleteLastGroup}>Delete Last Group</button>
+                <button onClick={changeColorCurrentGroup}>Change Group Color</button>
             </div>
         </Html>
     )
